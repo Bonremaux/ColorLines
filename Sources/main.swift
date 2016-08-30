@@ -34,9 +34,9 @@ SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND)
 var canvas = SDLCanvas(renderer: renderer!)
 var input = SDLInput()
 
-var game = LinesGame(canvas: canvas, input: input, boardSize: Cell(9, 9), squareSize: Vector(50, 50))
+var app = Application(canvas: canvas, input: input)
 
-game.run()
+app.run()
 
 TTF_Quit()
 SDL_Quit()
