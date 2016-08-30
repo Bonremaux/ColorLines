@@ -9,10 +9,13 @@ enum Message {
     case moved(from: Cell, to: Cell)
     case spawned([Ball])
     case next([Ball])
+    case scored(score: Int, lines: Int)
 }
 
 class Game {
     private let _board: Board
+    private var _score: Int = 0
+    private var _lines: Int = 0
 
     init(random: (max: Int) -> Int) {
         _board = Board(size: Cell(9, 9), random: random)
@@ -52,6 +55,13 @@ class Game {
         var msg: [Message] = [.moved(from: src, to: dest)]
         if !spawned.isEmpty { msg += [.spawned(spawned), .next(_board.nextBalls)] }
         if !cleared.isEmpty { msg += [.cleared(cleared)] }
+
+        for line in cleared {
+            _score += line.count * 10
+        }
+        _lines += cleared.count
+
+        msg += [.scored(score: _score, lines: _lines)]
 
         return msg
     }

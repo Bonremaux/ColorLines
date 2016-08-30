@@ -78,7 +78,7 @@ class AppView {
         _board = BoardView(pos: boardFrameSize, boxSize: boxSize)
         let rect = Rect(size: gridSize.toVector(cellSize: boxSize) + boardFrameSize * 2)
         _background = SpriteView(spriteName: "board.png", rect: rect)
-        _score = ScoreView(canvas: canvas, rect: Rect(pos: Vector(500, 50), size: Vector(150, 500)))
+        _score = ScoreView(canvas: canvas, rect: Rect(pos: Vector(550, 50), size: Vector(150, 500)))
     }
 
     func render(to canvas: Canvas, time: Seconds) {
@@ -100,12 +100,15 @@ class AppView {
 
     func apply(_ message: Message, time: Seconds) {
         _board.apply(message, time: time)
+        _score.apply(message, time: time)
     }
 }
 
 class ScoreView {
     private let _rect: Rect
     private let _scoreNumber: NumberCache
+    private var _score: Int = 0
+    private var _lines: Int = 0
 
     init(canvas: Canvas, rect: Rect) {
         _rect = rect
@@ -113,7 +116,18 @@ class ScoreView {
     }
 
     func render(to canvas: Canvas, time: Seconds) {
-        _scoreNumber.draw(to: canvas, at: _rect.position, numberString: String(123))
+        _scoreNumber.draw(to: canvas, at: _rect.position, numberString: String(_lines))
+        _scoreNumber.draw(to: canvas, at: _rect.position + Vector(0, 100), numberString: String(_score))
+    }
+
+    func apply(_ message: Message, time: Seconds) {
+        switch message {
+        case let Message.scored(score, lines):
+            _score = score
+            _lines = lines
+        default:
+            break
+        }
     }
 }
 
@@ -209,6 +223,8 @@ class BoardView {
                 _grid[cell].type = type
                 _grid[cell].setState(.next, time, next: nil)
             }
+        default:
+            break
         }
     }
 
