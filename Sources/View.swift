@@ -160,9 +160,6 @@ class BoardView {
         }
     }
 
-    func update(time: Seconds) {
-    }
-
     func translate(_ event: Event) -> Action? {
         switch event {
         case Event.initialize:
