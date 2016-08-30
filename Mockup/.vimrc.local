@@ -1,0 +1,7 @@
+function! Run()
+    if bufname("%") == ""
+        echo "no buffer"
+        return
+    endif
+    execute ":!palemoon " . bufname("%")
+endfunction

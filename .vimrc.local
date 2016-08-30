@@ -1,0 +1,21 @@
+function! Build(flags)
+    let log_file = '/tmp/build.log'
+    let cmd = '!swift build ' . a:flags . ' > ' . log_file
+            \.' && ./.build/debug/Lines'
+    execute cmd
+    execute 'cfile ' . log_file
+    cwindow
+endfunction
+
+function! BuildRelease()
+    call Build('')
+endfunction
+
+function! BuildDebug()
+    call Build('')
+endfunction
+
+function! Run()
+    call BuildDebug()
+endfunction
+

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Lines game mockup</title>
+    <style>
+.grid {
+    float: left;
+    width: calc((50px + 2px) * 9);
+    height: calc(50px + 2px) * 9);
+    overflow: auto;
+    background: #000;
+    border: 30px solid brown;
+}
+.cell {
+    float: left;
+    background: #FFF;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 90% 90%;
+    width: 50px;
+    height: 50px;
+    border: 1px solid black;
+}
+.ball-red {
+    background-image: url("Images/red.png")
+}
+.ball-green {
+    background-image: url("Images/green.png")
+}
+.ball-cyan {
+    background-image: url("Images/cyan.png")
+}
+.ball-yellow {
+    background-image: url("Images/yellow.png")
+}
+.ball-brown {
+    background-image: url("Images/brown.png")
+}
+.ball-blue {
+    background-image: url("Images/blue.png")
+}
+.ball-pink {
+    background-image: url("Images/pink.png")
+}
+.small {
+    background-size: 20% 20%;
+}
+@keyframes selected {
+    from {background-size: 80%;}
+    to {background-size: 90%;}
+}
+.selected {
+    animation-name: selected;
+    animation-duration: 0.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+    animation-direction: alternate;
+}
+.arrow {
+    background-size: auto;
+    background-image: url("Images/arrow.png")
+}
+.window {
+    display: inline-block;
+    overflow: auto;
+    background: #000;
+}
+    </style>
+    </head>
+    <script>
+    </script>
+    <body>
+        <div class="window">
+            <div class="grid">
+<!-- 1 -->
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell ball-red"></div>
+                <div class="cell"></div>
+                <div class="cell ball-cyan small"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+<!-- 2 -->
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell ball-green"></div>
+                <div class="cell ball-red"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell ball-green"></div>
+                <div class="cell"></div>
+<!-- 3 -->
+                <div class="cell"></div>
+                <div class="cell ball-pink"></div>
+                <div class="cell ball-pink"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell ball-red"></div>
+                <div class="cell ball-green small"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+<!-- 4 -->
+                <div class="cell ball-cyan"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell arrow"></div>
+                <div class="cell arrow"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+<!-- 5 -->
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell "></div>
+                <div class="cell"></div>
+                <div class="cell arrow"></div>
+                <div class="cell"></div>
+                <div class="cell ball-red"></div>
+                <div class="cell"></div>
+<!-- 6 -->
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell ball-brown small"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell arrow"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+<!-- 7 -->
+                <div class="cell ball-red selected"></div>
+                <div class="cell arrow"></div>
+                <div class="cell arrow"></div>
+                <div class="cell arrow"></div>
+                <div class="cell arrow"></div>
+                <div class="cell arrow"></div>
+                <div class="cell ball-brown"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+<!-- 8 -->
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell ball-blue"></div>
+                <div class="cell"></div>
+<!-- 9 -->
+                <div class="cell"></div>
+                <div class="cell ball-yellow"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell ball-blue"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+                <div class="cell"></div>
+            </div>
+        </div>
+    </body>
+</html>
