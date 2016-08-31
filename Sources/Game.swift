@@ -9,13 +9,12 @@ enum Message {
     case moved(from: Cell, to: Cell)
     case spawned([Ball])
     case next([Ball])
-    case scored(score: Int, lines: Int)
+    case scored(Int)
 }
 
 class Game {
     private let _board: Board
     private var _score: Int = 0
-    private var _lines: Int = 0
 
     init(random: (max: Int) -> Int) {
         _board = Board(size: Cell(9, 9), random: random)
@@ -32,7 +31,7 @@ class Game {
 
     private func start() -> [Message] {
         let spawned = _board.spawnBalls()
-        return [.spawned(spawned), .next(_board.nextBalls), .scored(score: 0, lines: 0)]
+        return [.spawned(spawned), .next(_board.nextBalls), .scored(0)]
     }
 
     private func moveBall(from src: Cell, to dest: Cell) -> [Message] {
@@ -59,9 +58,8 @@ class Game {
         for line in cleared {
             _score += line.count * 10
         }
-        _lines += cleared.count
 
-        msg += [.scored(score: _score, lines: _lines)]
+        msg += [.scored(_score)]
 
         return msg
     }

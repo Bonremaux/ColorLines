@@ -70,25 +70,22 @@ class GameView {
     private let _board: BoardView
     private let _background: SpriteView
     private let _score: TextView
-    private let _lines: TextView
 
     init() {
         let boxSize = Vector(50, 50)
         let boardFrameSize = Vector(30, 30)
         let gridSize = Cell(9, 9)
-        _board = BoardView(pos: boardFrameSize + Vector(0, 50), boxSize: boxSize)
+        _board = BoardView(pos: boardFrameSize + Vector(0, 0), boxSize: boxSize)
         let rect = Rect(size: gridSize.toVector(cellSize: boxSize) + boardFrameSize * 2 + Vector(0, 50))
         _background = SpriteView(spriteName: "board.png", rect: rect)
-        let font = canvas.loadFont(family: "GoodDog.otf", size: 50, color: Color.yellow)
-        _score = TextView(font: font, str: "", pos: Vector(170, 0))
-        _lines = TextView(font: font, str: "", pos: Vector(350, 0))
+        let font = canvas.loadFont(family: "GoodDog.otf", size: 50, color: Color(100, 100, 150))
+        _score = TextView(font: font, str: "", pos: Vector(215, 489))
     }
 
     func render(to canvas: Canvas, time: Seconds) {
         _background.render(to: canvas, time: time)
         _board.render(to: canvas, time: time)
         _score.render(to: canvas, time: time)
-        _lines.render(to: canvas, time: time)
     }
 
     func translate(_ event: Event) -> Action? {
@@ -103,9 +100,8 @@ class GameView {
     }
 
     func apply(_ message: Message, time: Seconds) {
-        if case let Message.scored(score, lines) = message {
+        if case let Message.scored(score) = message {
             _score.setString(String(score))
-            _lines.setString(String(lines))
         }
         else {
             _board.apply(message, time: time)
