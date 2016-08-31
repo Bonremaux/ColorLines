@@ -19,7 +19,7 @@ if TTF_Init() == -1 {
     sdlFatal("TTF_Init")
 }
 
-var window = SDL_CreateWindow("SDL Tutorial", 0, 0, 700, 505, SDL_WINDOW_SHOWN.rawValue)
+var window = SDL_CreateWindow("SDL Tutorial", 0, 0, 510, 510 + 50, SDL_WINDOW_SHOWN.rawValue)
 if window == nil {
     sdlFatal("SDL_CreateWindow failed")
 }

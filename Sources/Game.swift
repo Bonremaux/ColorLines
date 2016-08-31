@@ -32,7 +32,7 @@ class Game {
 
     private func start() -> [Message] {
         let spawned = _board.spawnBalls()
-        return [.spawned(spawned), .next(_board.nextBalls)]
+        return [.spawned(spawned), .next(_board.nextBalls), .scored(score: 0, lines: 0)]
     }
 
     private func moveBall(from src: Cell, to dest: Cell) -> [Message] {

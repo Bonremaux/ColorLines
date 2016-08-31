@@ -8,7 +8,11 @@ protocol Canvas {
     func drawRect(dest rect: Rect)
     func clear()
     func present()
-    func createNumberCache(color: Color) -> NumberCache
+    func loadFont(family: String, size: Int, color: Color) -> Font
+    func drawText(font: Font, str: String, pos: Vector)
+}
+
+protocol Font {
 }
 
 typealias KeyCode = Int
@@ -70,20 +74,9 @@ class Texture {
 class SDLCanvas: Canvas {
     private var _renderer: OpaquePointer
     private var _textures: [String: Texture] = [:]
-    private let _font: OpaquePointer
 
     init(renderer: OpaquePointer) {
         _renderer = renderer
-        if let font = TTF_OpenFont("Data/GoodDog.otf", 50) {
-            _font = font
-        }
-        else {
-            fatalError("TTF_OpenFont: \(String(validatingUTF8:SDL_GetError())!)");
-        }
-    }
-
-    deinit {
-        TTF_CloseFont(_font)
     }
 
     func setColor(_ color: Color) {
@@ -115,8 +108,77 @@ class SDLCanvas: Canvas {
         return Texture(renderer: _renderer, texture: texture)
     }
 
-    func createNumberCache(color: Color) -> NumberCache {
-        return NumberCache(renderer: _renderer, font: _font, color: color)
+    func loadFont(family: String, size: Int, color: Color) -> Font {
+        return SDLFont(path: "Data/" + family, size: size, color: color)
+    }
+
+    func drawText(font: Font, str: String, pos: Vector) {
+        let sdlFont = font as! SDLFont
+        sdlFont.drawText(_renderer, str, pos)
+    }
+}
+
+class SDLFont: Font {
+    private let _font: OpaquePointer
+    private let _color: Color
+
+    class Glyph {
+        let texture: OpaquePointer
+        let width: Int32
+        let height: Int32
+
+        init(_ t: OpaquePointer, _ w: Int32, _ h: Int32) {
+            texture = t
+            width = w
+            height = h
+        }
+
+        deinit {
+            SDL_DestroyTexture(texture)
+        }
+    }
+
+    private var _glyphs = [Character: Glyph]()
+
+    init(path: String, size: Int, color: Color) {
+        _color = color
+        if let font = TTF_OpenFont(path, Int32(size)) {
+            _font = font
+        }
+        else {
+            fatalError("TTF_OpenFont: \(String(validatingUTF8:SDL_GetError())!)");
+        }
+    }
+
+    deinit {
+        TTF_CloseFont(_font)
+    }
+
+    func drawText(_ renderer: OpaquePointer, _ str: String, _ pos: Vector) {
+        var p = pos
+        for char in str.characters {
+            if let glyph = getGlyph(renderer, char) {
+                var rect = SDL_Rect(x: Int32(p.x), y: Int32(p.y), w: glyph.width, h: glyph.height)
+                SDL_RenderCopy(renderer, glyph.texture, nil, &rect)
+                p += Vector(Float(glyph.width), 0)
+            }
+        }
+    }
+
+    func getGlyph(_ renderer: OpaquePointer, _ char: Character) -> Glyph? {
+        if _glyphs[char] == nil {
+            _glyphs[char] = createGlyph(renderer, char)
+        }
+        return _glyphs[char]
+    }
+
+    func createGlyph(_ renderer: OpaquePointer, _ char: Character) -> Glyph? {
+        guard let surface = TTF_RenderText_Blended(_font, String(char), SDL_Color(_color)) else { return nil }
+        defer { SDL_FreeSurface(surface) }
+        guard let texture = SDL_CreateTextureFromSurface(renderer, surface) else { return nil }
+        let width = surface.pointee.w
+        let height = surface.pointee.h
+        return Glyph(texture, width, height)
     }
 }
 
@@ -171,48 +233,3 @@ class SDLInput: Input {
         return Int(rand()) % max
     }
 }
-
-class NumberCache {
-    class Glyph {
-        let texture: OpaquePointer
-        let width: Int32
-        let height: Int32
-
-        init(_ t: OpaquePointer, _ w: Int32, _ h: Int32) {
-            texture = t
-            width = w
-            height = h
-        }
-
-        deinit {
-            SDL_DestroyTexture(texture)
-        }
-    }
-
-    private var _glyphs = [Character: Glyph]()
-
-    private init(renderer: OpaquePointer, font: OpaquePointer, color: Color) {
-        for char in "0123456789".characters {
-            let surface = TTF_RenderText_Blended(font, String(char), SDL_Color(color))
-            if surface != nil {
-                let texture = SDL_CreateTextureFromSurface(renderer, surface)
-                let width = surface!.pointee.w
-                let height = surface!.pointee.h
-                _glyphs[char] = Glyph(texture!, width, height)
-                SDL_FreeSurface(surface)
-            }
-        }
-    }
-
-    func draw(to canvas: Canvas, at pos: Vector, numberString: String) {
-        var p = pos
-        for char in numberString.characters {
-            if let glyph = _glyphs[char] {
-                var rect = SDL_Rect(x: Int32(p.x), y: Int32(p.y), w: glyph.width, h: glyph.height)
-                SDL_RenderCopy(renderer, glyph.texture, nil, &rect)
-                p += Vector(Float(glyph.width), 0)
-            }
-        }
-    }
-}
-

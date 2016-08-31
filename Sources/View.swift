@@ -66,25 +66,29 @@ extension BallType {
     }
 }
 
-class AppView {
+class GameView {
     private let _board: BoardView
     private let _background: SpriteView
-    private let _score: ScoreView
+    private let _score: TextView
+    private let _lines: TextView
 
     init() {
         let boxSize = Vector(50, 50)
         let boardFrameSize = Vector(30, 30)
         let gridSize = Cell(9, 9)
-        _board = BoardView(pos: boardFrameSize, boxSize: boxSize)
-        let rect = Rect(size: gridSize.toVector(cellSize: boxSize) + boardFrameSize * 2)
+        _board = BoardView(pos: boardFrameSize + Vector(0, 50), boxSize: boxSize)
+        let rect = Rect(size: gridSize.toVector(cellSize: boxSize) + boardFrameSize * 2 + Vector(0, 50))
         _background = SpriteView(spriteName: "board.png", rect: rect)
-        _score = ScoreView(canvas: canvas, rect: Rect(pos: Vector(550, 50), size: Vector(150, 500)))
+        let font = canvas.loadFont(family: "GoodDog.otf", size: 50, color: Color.yellow)
+        _score = TextView(font: font, str: "", pos: Vector(170, 0))
+        _lines = TextView(font: font, str: "", pos: Vector(350, 0))
     }
 
     func render(to canvas: Canvas, time: Seconds) {
         _background.render(to: canvas, time: time)
         _board.render(to: canvas, time: time)
         _score.render(to: canvas, time: time)
+        _lines.render(to: canvas, time: time)
     }
 
     func translate(_ event: Event) -> Action? {
@@ -99,35 +103,33 @@ class AppView {
     }
 
     func apply(_ message: Message, time: Seconds) {
-        _board.apply(message, time: time)
-        _score.apply(message, time: time)
+        if case let Message.scored(score, lines) = message {
+            _score.setString(String(score))
+            _lines.setString(String(lines))
+        }
+        else {
+            _board.apply(message, time: time)
+        }
     }
 }
 
-class ScoreView {
-    private let _rect: Rect
-    private let _scoreNumber: NumberCache
-    private var _score: Int = 0
-    private var _lines: Int = 0
+class TextView {
+    private let _pos: Vector
+    private let _font: Font
+    private var _str: String
 
-    init(canvas: Canvas, rect: Rect) {
-        _rect = rect
-        _scoreNumber = canvas.createNumberCache(color: Color.yellow)
+    init(font: Font, str: String, pos: Vector) {
+        _pos = pos
+        _font = font
+        _str = str
     }
 
     func render(to canvas: Canvas, time: Seconds) {
-        _scoreNumber.draw(to: canvas, at: _rect.position, numberString: String(_lines))
-        _scoreNumber.draw(to: canvas, at: _rect.position + Vector(0, 100), numberString: String(_score))
+        canvas.drawText(font: _font, str: _str, pos: _pos)
     }
 
-    func apply(_ message: Message, time: Seconds) {
-        switch message {
-        case let Message.scored(score, lines):
-            _score = score
-            _lines = lines
-        default:
-            break
-        }
+    func setString(_ str: String) {
+        _str = str
     }
 }
 
