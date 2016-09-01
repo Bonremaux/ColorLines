@@ -16,7 +16,7 @@ class Application {
     func run() {
         while true {
             while let event = _input.pollEvent() {
-                if let action = _view.translate(event) {
+                if let action = _view.translate(event, time: elapsed()) {
                     if case .quit = action {
                         return
                     }

@@ -21,6 +21,7 @@ enum BallState {
     case normal
     case spawning
     case clearing
+    case selected
 
     func anim(start: Seconds) -> Anim {
         switch self {
@@ -29,6 +30,7 @@ enum BallState {
             case normal: return Anim(start: start, duration: 1)
             case spawning: return Anim(start: start, duration: 0.5)
             case clearing: return Anim(start: start, duration: 0.3)
+            case selected: return Anim(start: start, duration: 1.0)
         }
     }
 }
@@ -51,6 +53,9 @@ struct Box {
                 state = next
                 nextState = nil
                 anim = state.anim(start: time)
+            }
+            else {
+                anim = Anim(start: time, duration: anim.duration)
             }
         }
     }
@@ -88,14 +93,14 @@ class GameView {
         _score.render(to: canvas, time: time)
     }
 
-    func translate(_ event: Event) -> Action? {
+    func translate(_ event: Event, time: Seconds) -> Action? {
         switch event {
         case Event.quit:
             return Action.quit
         case .key(.pressed, SDLK_q):
             return Action.quit
         default:
-            return _board.translate(event)
+            return _board.translate(event, time: time)
         }
     }
 
@@ -159,21 +164,22 @@ class BoardView {
                 let rect = bounds.scaled(f).centered(relativelyTo: bounds)
                 canvas.drawTexture(name: box.type.spriteName, dest: rect.moved(by: _pos))
             case .normal:
-                if let selected = _selected where selected == cell {
-                    canvas.setColor(Color(0, 255, 0, 50))
-                    canvas.drawRect(dest: cell.bounds(cellSize: _boxSize).moved(by: _pos))
-                }
                 canvas.drawTexture(name: box.type.spriteName, dest: cell.bounds(cellSize: _boxSize).moved(by: _pos))
             case .clearing:
                 let f = 1.0 - box.anim.pos(time)
                 let bounds = cell.bounds(cellSize: _boxSize)
                 let rect = bounds.scaled(Vector(f, 1)).centered(relativelyTo: bounds)
                 canvas.drawTexture(name: box.type.spriteName, dest: rect.moved(by: _pos))
+            case .selected:
+                let f = box.anim.pos(time)
+                let offset = (Float(sin(Double(f * 2 * Float.pi))) + 1) / 2 * 10
+                let rect = cell.bounds(cellSize: _boxSize).moved(by: _pos - Vector(0, offset))
+                canvas.drawTexture(name: box.type.spriteName, dest: rect)
             }
         }
     }
 
-    func translate(_ event: Event) -> Action? {
+    func translate(_ event: Event, time: Seconds) -> Action? {
         switch event {
         case Event.initialize:
             return Action.start
@@ -183,7 +189,7 @@ class BoardView {
                 return nil
             }
             if !_grid[cell].isEmpty {
-                _selected = cell
+                select(cell, time)
             }
             else {
                 if let src = _selected {
@@ -196,6 +202,16 @@ class BoardView {
         return nil
     }
 
+    func select(_ cell: Cell?, _ time: Seconds) {
+        if let old = _selected {
+            _grid[old].setState(.normal, time, next: nil)
+        }
+        if let new = cell {
+            _selected = new
+            _grid[new].setState(.selected, time, next: nil)
+        }
+    }
+
     func apply(_ message: Message, time: Seconds) {
         switch message {
         case let Message.spawned(balls):
@@ -205,7 +221,9 @@ class BoardView {
             }
         case let Message.moved(from: src, to: dest):
             _grid[dest] = _grid[src]
+            _grid[dest].setState(.normal, time, next: nil)
             _grid[src].setState(.empty, time, next: nil)
+            _selected = nil
         case let Message.cleared(lines):
             for line in lines {
                 for cell in line {
