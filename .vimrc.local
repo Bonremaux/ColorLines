@@ -1,7 +1,7 @@
 function! Build(flags)
     let log_file = '/tmp/build.log'
     let cmd = '!swift build ' . a:flags . ' > ' . log_file
-            \.' && ./.build/debug/Lines'
+            \.' && ./.build/debug/ColorLines'
     execute cmd
     execute 'cfile ' . log_file
     cwindow
