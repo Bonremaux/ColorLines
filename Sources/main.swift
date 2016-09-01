@@ -24,17 +24,17 @@ if window == nil {
     sdlFatal("SDL_CreateWindow failed")
 }
 
-var renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED.rawValue)
+private var renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED.rawValue)
 if renderer == nil {
     sdlFatal("SDL_CreateRenderer failed")
 }
 
 SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND)
 
-var canvas = SDLCanvas(renderer: renderer!)
-var input = SDLInput()
+private var canvas = SDLCanvas(renderer: renderer!)
+private var input = SDLInput()
 
-var app = Application(canvas: canvas, input: input)
+private var app = Application(canvas: canvas, input: input)
 
 app.run()
 

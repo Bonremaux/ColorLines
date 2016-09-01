@@ -80,10 +80,13 @@ class Board {
         return lines
     }
 
-    private func getRandomEmptyCell() -> Cell {
+    private func getEmptyCell() -> Cell? {
+        if emptyCount - _nextBalls.count <= 0 {
+            return nil
+        }
         while true {
             let cell = Cell(_random(max: _balls.size.x), _random(max: _balls.size.y))
-            if _balls[cell] == nil && !_nextBalls.contains({ $0.0 == cell }) {
+            if _balls[cell] == nil && !_nextBalls.contains({ cell == $0.0 }) {
                 return cell
             }
         }
@@ -93,25 +96,33 @@ class Board {
         var spawned: [Ball] = []
 
         for (cell, type) in _nextBalls {
-            let spawnCell = _balls[cell] == nil ? cell : getRandomEmptyCell()
+            guard let spawnCell = _balls[cell] == nil ? cell : getEmptyCell() else { break }
             _balls[spawnCell] = type
             spawned.append((spawnCell, type))
         }
+        _nextBalls = []
 
         while spawned.count != 3 {
-            let cell = getRandomEmptyCell()
+            guard let cell = getEmptyCell() else { break }
             let type = BallType.allValues[_random(max: BallType.allValues.count)]
             _balls[cell] = type
             spawned.append((cell, type))
         }
 
-        _nextBalls = []
-        for _ in 1...3 {
-            let cell = getRandomEmptyCell()
+        while _nextBalls.count != 3 {
+            guard let cell = getEmptyCell() else { break }
             let type = BallType.allValues[_random(max: BallType.allValues.count)]
             _nextBalls.append((cell, type))
         }
 
         return spawned
+    }
+
+    private var emptyCount: Int {
+        return _balls.enumerated().filter{ $0.1 == nil }.count
+    }
+
+    var isFull: Bool {
+        return emptyCount == 0
     }
 }

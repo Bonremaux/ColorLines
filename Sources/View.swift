@@ -71,7 +71,7 @@ class GameView {
     private let _background: SpriteView
     private let _score: TextView
 
-    init() {
+    init(canvas: Canvas) {
         let boxSize = Vector(50, 50)
         let boardFrameSize = Vector(30, 30)
         let gridSize = Cell(9, 9)
@@ -100,12 +100,13 @@ class GameView {
     }
 
     func apply(_ message: Message, time: Seconds) {
-        if case let Message.scored(score) = message {
+        switch message {
+        case let Message.scored(score):
             _score.setString(String(score))
+        default:
+            break
         }
-        else {
-            _board.apply(message, time: time)
-        }
+        _board.apply(message, time: time)
     }
 }
 

@@ -104,7 +104,7 @@ class SDLCanvas: Canvas {
     }
 
     private func loadTexture(_ name: String) -> Texture? {
-        let texture = IMG_LoadTexture(renderer, "Data/" + name)
+        let texture = IMG_LoadTexture(_renderer, "Data/" + name)
         return Texture(renderer: _renderer, texture: texture)
     }
 
