@@ -17,7 +17,6 @@ struct Anim {
 
 enum BallState {
     case empty
-    case next
     case normal
     case spawning
     case clearing
@@ -26,7 +25,6 @@ enum BallState {
     func anim(start: Seconds) -> Anim {
         switch self {
             case empty: return Anim(start: start, duration: 0)
-            case next: return Anim(start: start, duration: 1)
             case normal: return Anim(start: start, duration: 1)
             case spawning: return Anim(start: start, duration: 0.5)
             case clearing: return Anim(start: start, duration: 0.3)
@@ -40,6 +38,7 @@ struct Box {
     var state: BallState = .empty
     var nextState: BallState? = nil
     var anim: Anim = Anim(start: 0, duration: 0)
+    var traceAnim: Anim? = nil
 
     mutating func setState(_ newState: BallState, _ time: Seconds, next: BallState?) {
         state = newState
@@ -56,6 +55,12 @@ struct Box {
             }
             else {
                 anim = Anim(start: time, duration: anim.duration)
+            }
+        }
+
+        if let anim = traceAnim {
+            if anim.pos(time) > 1.0 {
+                traceAnim = nil
             }
         }
     }
@@ -142,6 +147,7 @@ class BoardView {
     private let _pos: Vector
     private let _boxSize: Vector
     private var _selected: Cell? = nil
+    private var _nextBalls: [Ball] = []
 
     init(pos: Vector, boxSize: Vector) {
         _grid = Grid<Box>(size: Cell(9, 9), filling: Box())
@@ -150,16 +156,17 @@ class BoardView {
     }
 
     func render(to canvas: Canvas, time: Seconds) {
+        for (cell, type) in _nextBalls {
+            let rect = cell.bounds(cellSize: _boxSize)
+            let smallRect = rect.scaled(1/3).centered(relativelyTo: rect)
+            canvas.drawTexture(name: type.toString + ".png", dest: smallRect.moved(by: _pos))
+        }
         for (cell, _) in _grid.enumerated() {
             _grid[cell].update(time: time)
             let box = _grid[cell]
             switch box.state {
             case .empty:
                 break
-            case .next:
-                let rect = cell.bounds(cellSize: _boxSize)
-                let smallRect = rect.scaled(1/3).centered(relativelyTo: rect)
-                canvas.drawTexture(name: box.type.toString + ".png", dest: smallRect.moved(by: _pos))
             case .spawning:
                 let f = box.anim.pos(time) * 0.7 + 0.3
                 let bounds = cell.bounds(cellSize: _boxSize)
@@ -177,6 +184,15 @@ class BoardView {
                 let offset = (Float(sin(Double(f * 2 * Float.pi))) + 1) / 2 * 10
                 let rect = cell.bounds(cellSize: _boxSize).moved(by: _pos - Vector(0, offset))
                 canvas.drawTexture(name: box.type.spriteName, dest: rect)
+            }
+            if let anim = box.traceAnim {
+                let f = anim.pos(time)
+                if f > 0 {
+                    let rect = cell.bounds(cellSize: _boxSize).moved(by: _pos)
+                    let alpha = (1 - f) * 0.3
+                    canvas.setColor(Color.fromFloat(0.4, 0.4, 0.8, alpha))
+                    canvas.drawRect(dest: rect)
+                }
             }
         }
     }
@@ -221,11 +237,14 @@ class BoardView {
                 _grid[cell].type = type
                 _grid[cell].setState(.spawning, time, next: .normal)
             }
-        case let Message.moved(from: src, to: dest):
+        case let Message.moved(from: src, to: dest, path: path):
             _grid[dest] = _grid[src]
             _grid[dest].setState(.normal, time, next: nil)
             _grid[src].setState(.empty, time, next: nil)
             _selected = nil
+            for (i, cell) in path.enumerated() {
+                _grid[cell].traceAnim = Anim(start: time + Double(i) * 0.01, duration: 0.5)
+            }
         case let Message.cleared(lines):
             for line in lines {
                 for cell in line {
@@ -233,15 +252,7 @@ class BoardView {
                 }
             }
         case let Message.next(balls):
-            for (cell, box) in _grid.enumerated() {
-                if box.state == .next {
-                    _grid[cell].state = .empty
-                }
-            }
-            for (cell, type) in balls {
-                _grid[cell].type = type
-                _grid[cell].setState(.next, time, next: nil)
-            }
+            _nextBalls = balls
         default:
             break
         }

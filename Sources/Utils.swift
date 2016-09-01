@@ -243,6 +243,10 @@ struct Color {
         self.a = a
     }
 
+    static func fromFloat(_ r: Float, _ g: Float, _ b: Float, _ a: Float = 1.0) -> Color {
+        return Color(UInt8(r * 255), UInt8(g * 255), UInt8(b * 255), UInt8(a * 255))
+    }
+
     init(hex: Int) {
         self.init(UInt8((hex >> 16) & 0xff), UInt8((hex >> 8) & 0xff), UInt8(hex & 0xff))
     }

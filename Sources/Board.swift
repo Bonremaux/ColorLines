@@ -50,6 +50,11 @@ class Board {
         return _distance.hasPath(to: dest)
     }
 
+    func findPath(from src: Cell, to dest: Cell) -> [Cell] {
+        _distance.calculate(start: src, isObstacle: { _balls[$0] != nil })
+        return _distance.path(to: dest)
+    }
+
     private func clearLine(from: Cell, step: Cell) -> [Cell] {
         guard let type = _balls[from] else {
             return []

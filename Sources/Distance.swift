@@ -35,7 +35,7 @@ struct DistanceGrid {
 
     func path(to dest: Cell) -> [Cell] {
         guard _distance[dest] > 0 else { return [] }
-        var path: [Cell] = []
+        var path: [Cell] = [dest]
         var cell = dest
         while _distance[cell] != 0 {
             let nbs = neighbors(cell).filter { _distance[$0] >= 0 && _distance[$0] < _distance[cell] }
@@ -47,7 +47,7 @@ struct DistanceGrid {
                 return []
             }
         }
-        return path
+        return path.reversed()
     }
 
     func hasPath(to dest: Cell) -> Bool {
