@@ -11,13 +11,18 @@ func sdlFatal(_ str: String) {
 
 srand(UInt32(time(nil)));
 
-if SDL_Init(UInt32(SDL_INIT_VIDEO)) == -1 {
+if SDL_Init(UInt32(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) == -1 {
     sdlFatal("SDL_Init")
 }
 
 if TTF_Init() == -1 {
     sdlFatal("TTF_Init")
 }
+
+Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, UInt16(MIX_DEFAULT_FORMAT), 2, 640)
+
+// let wav = Mix_LoadWAV_RW(SDL_RWFromFile("Data/clear.wav", "rb"), 1)
+// Mix_PlayChannelTimed(-1, wav, 0, -1)
 
 var window = SDL_CreateWindow("SDL Tutorial", 0, 0, 510, 510 + 50, SDL_WINDOW_SHOWN.rawValue)
 if window == nil {

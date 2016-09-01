@@ -104,10 +104,12 @@ class GameView {
         }
     }
 
-    func apply(_ message: Message, time: Seconds) {
+    func apply(_ message: Message, time: Seconds, play: (String) -> ()) {
         switch message {
         case let Message.scored(score):
             _score.setString(String(score))
+        case Message.cleared:
+            play("clear.wav")
         default:
             break
         }

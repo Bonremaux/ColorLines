@@ -22,7 +22,7 @@ class Application {
                     }
                     let messages = _game.process(action)
                     for msg in messages {
-                        _view.apply(msg, time: elapsed())
+                        _view.apply(msg, time: elapsed(), play: _canvas.playSound)
                     }
                 }
             }

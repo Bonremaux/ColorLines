@@ -10,6 +10,7 @@ protocol Canvas {
     func present()
     func loadFont(family: String, size: Int, color: Color) -> Font
     func drawText(font: Font, str: String, pos: Vector)
+    func playSound(name: String)
 }
 
 protocol Font {
@@ -74,6 +75,7 @@ class Texture {
 class SDLCanvas: Canvas {
     private var _renderer: OpaquePointer
     private var _textures: [String: Texture] = [:]
+    private var _sounds: [String: UnsafeMutablePointer<Mix_Chunk>] = [:]
 
     init(renderer: OpaquePointer) {
         _renderer = renderer
@@ -93,6 +95,15 @@ class SDLCanvas: Canvas {
             _textures[name] = loadTexture(name)
         }
         _textures[name]?.draw(to: self, dest: rect)
+    }
+
+    func playSound(name: String) {
+        if _sounds[name] == nil {
+            _sounds[name] = Mix_LoadWAV_RW(SDL_RWFromFile("Data/" + name, "rb"), 1)
+        }
+        if let sound = _sounds[name] {
+            Mix_PlayChannelTimed(-1, sound, 0, -1)
+        }
     }
 
     func clear() {
