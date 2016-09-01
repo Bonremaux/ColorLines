@@ -189,7 +189,8 @@ class BoardView {
                 let f = anim.pos(time)
                 if f > 0 {
                     let rect = cell.bounds(cellSize: _boxSize).moved(by: _pos)
-                    let alpha = (1 - f) * 0.3
+                    var alpha = (1 - f)
+                    alpha = alpha > 0.5 ? 0.5 : alpha
                     canvas.setColor(Color.fromFloat(0.4, 0.4, 0.8, alpha))
                     canvas.drawRect(dest: rect)
                 }
@@ -243,7 +244,7 @@ class BoardView {
             _grid[src].setState(.empty, time, next: nil)
             _selected = nil
             for (i, cell) in path.enumerated() {
-                _grid[cell].traceAnim = Anim(start: time + Double(i) * 0.01, duration: 0.5)
+                _grid[cell].traceAnim = Anim(start: time + Double(i) * 0.02, duration: 0.5)
             }
         case let Message.cleared(lines):
             for line in lines {
