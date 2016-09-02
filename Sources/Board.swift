@@ -124,7 +124,7 @@ class Board {
     }
 
     private var emptyCount: Int {
-        return _balls.enumerated().filter{ $0.1 == nil }.count
+        return _balls.values().filter{ $0 == nil }.count
     }
 
     var isFull: Bool {

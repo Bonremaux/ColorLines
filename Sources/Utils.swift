@@ -204,6 +204,10 @@ struct Grid<T> {
         return size.x * size.y == 0
     }
 
+    func values() -> Array<T>.Iterator {
+        return _values.makeIterator()
+    }
+
     func enumerated() -> GridSequence<T> {
         return GridSequence(grid: self)
     }
