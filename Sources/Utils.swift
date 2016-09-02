@@ -93,23 +93,23 @@ struct Rect: Equatable {
         return Rect(pos: pos, size: size)
     }
 
-    func moved(by offset: Vector) -> Rect {
+    func shifted(by offset: Vector) -> Rect {
         return moved(to: position + offset)
     }
 
-    func expanded(thickness t: Float) -> Rect {
-        return Rect(pos: position - t, size: size + t * 2)
+    func inflated(by amount: Vector) -> Rect {
+        return Rect(pos: position - amount, size: size + amount * 2)
     }
 
-    func scaled(_ scale: Float) -> Rect {
-        return Rect(pos: position, size: size * scale)
+    func scaled(by factor: Vector) -> Rect {
+        return Rect(pos: position, size: size * factor)
     }
 
-    func scaled(_ scale: Vector) -> Rect {
-        return Rect(pos: position, size: size * scale)
+    func scaled(by factor: Float) -> Rect {
+        return Rect(pos: position, size: size * factor)
     }
 
-    func centered(relativelyTo rect: Rect) -> Rect {
+    func centered(on rect: Rect) -> Rect {
         return moved(to: rect.position + (rect.size - size) / 2)
     }
 }

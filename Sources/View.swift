@@ -9,9 +9,9 @@ struct Anim {
         self.duration = duration
     }
 
-    func pos(_ time: Seconds) -> Float {
-        let elapsed = time - start
-        return Float(elapsed / duration)
+    func pos(_ now: Seconds) -> Float {
+        let diff = now - start
+        return Float(diff / duration)
     }
 }
 
@@ -158,8 +158,8 @@ class BoardView {
     func render(to canvas: Canvas, time: Seconds) {
         for (cell, type) in _nextBalls {
             let rect = cell.bounds(cellSize: _boxSize)
-            let smallRect = rect.scaled(1/3).centered(relativelyTo: rect)
-            canvas.drawTexture(name: type.toString + ".png", dest: smallRect.moved(by: _pos))
+            let smallRect = rect.scaled(by: 1/3).centered(on: rect)
+            canvas.drawTexture(name: type.toString + ".png", dest: smallRect.shifted(by: _pos))
         }
         for (cell, _) in _grid.enumerated() {
             _grid[cell].update(time: time)
@@ -170,25 +170,25 @@ class BoardView {
             case .spawning:
                 let f = box.anim.pos(time) * 0.7 + 0.3
                 let bounds = cell.bounds(cellSize: _boxSize)
-                let rect = bounds.scaled(f).centered(relativelyTo: bounds)
-                canvas.drawTexture(name: box.type.spriteName, dest: rect.moved(by: _pos))
+                let rect = bounds.scaled(by: f).centered(on: bounds)
+                canvas.drawTexture(name: box.type.spriteName, dest: rect.shifted(by: _pos))
             case .normal:
-                canvas.drawTexture(name: box.type.spriteName, dest: cell.bounds(cellSize: _boxSize).moved(by: _pos))
+                canvas.drawTexture(name: box.type.spriteName, dest: cell.bounds(cellSize: _boxSize).shifted(by: _pos))
             case .clearing:
                 let f = 1.0 - box.anim.pos(time)
                 let bounds = cell.bounds(cellSize: _boxSize)
-                let rect = bounds.scaled(Vector(f, 1)).centered(relativelyTo: bounds)
-                canvas.drawTexture(name: box.type.spriteName, dest: rect.moved(by: _pos))
+                let rect = bounds.scaled(by: Vector(f, 1)).centered(on: bounds)
+                canvas.drawTexture(name: box.type.spriteName, dest: rect.shifted(by: _pos))
             case .selected:
                 let f = box.anim.pos(time)
                 let offset = (Float(sin(Double(f * 2 * Float.pi))) + 1) / 2 * 10
-                let rect = cell.bounds(cellSize: _boxSize).moved(by: _pos - Vector(0, offset))
+                let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos - Vector(0, offset))
                 canvas.drawTexture(name: box.type.spriteName, dest: rect)
             }
             if let anim = box.traceAnim {
                 let f = anim.pos(time)
                 if f > 0 {
-                    let rect = cell.bounds(cellSize: _boxSize).moved(by: _pos)
+                    let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos)
                     var alpha = (1 - f)
                     alpha = alpha > 0.5 ? 0.5 : alpha
                     canvas.setColor(Color.fromFloat(0.4, 0.4, 0.8, alpha))
