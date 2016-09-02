@@ -35,17 +35,11 @@ class Game {
     }
 
     private func moveBall(from src: Cell, to dest: Cell) -> [Message] {
-        guard _board[src] != nil && _board[dest] == nil else {
-            return []
-        }
-
-        let path = _board.findPath(from: src, to: dest)
+        let path = _board.moveBall(from: src, to: dest)
         if path.isEmpty {
             return []
         }
 
-        _board[dest] = _board[src]
-        _board[src] = nil
         var cleared = _board.clearAllLines()
         var spawned: [Ball] = []
         if cleared.count == 0 {

@@ -22,13 +22,11 @@ enum BallType: Int {
 
 class Board {
     private var _balls: Grid<BallType?>
-    private var _distance: DistanceGrid
     private var _nextBalls: [Ball] = []
     private let _random: (max: Int) -> Int
 
     init(size: Cell, random: (max: Int) -> Int) {
         _balls = Grid<BallType?>(size: size, filling: nil)
-        _distance = DistanceGrid(size: size)
         _random = random
     }
 
@@ -36,23 +34,15 @@ class Board {
         return _nextBalls
     }
 
-    subscript(cell: Cell) -> BallType? {
-        get {
-            return _balls[cell]
+    func moveBall(from src: Cell, to dest: Cell) -> [Cell] {
+        var distance = DistanceGrid(size: _balls.size)
+        distance.calculate(start: src, isObstacle: { _balls[$0] != nil })
+        let path = distance.path(to: dest)
+        if !path.isEmpty {
+            _balls[dest] = _balls[src]
+            _balls[src] = nil
         }
-        set {
-            _balls[cell] = newValue
-        }
-    }
-
-    func hasPath(from src: Cell, to dest: Cell) -> Bool {
-        _distance.calculate(start: src, isObstacle: { _balls[$0] != nil })
-        return _distance.hasPath(to: dest)
-    }
-
-    func findPath(from src: Cell, to dest: Cell) -> [Cell] {
-        _distance.calculate(start: src, isObstacle: { _balls[$0] != nil })
-        return _distance.path(to: dest)
+        return path
     }
 
     private func clearLine(from: Cell, step: Cell) -> [Cell] {
