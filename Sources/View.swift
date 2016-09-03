@@ -33,18 +33,12 @@ enum BallState {
     }
 }
 
-enum TraceState {
-    case highlighted
-    case fading
-}
-
 struct Box {
     var type: BallType = .blue
     var state: BallState = .empty
     var nextState: BallState? = nil
     var anim: Anim = Anim(start: 0, duration: 0)
     var traceAnim: Anim? = nil
-    var traceState: TraceState = .highlighted
 
     mutating func setState(_ newState: BallState, _ time: Seconds, next: BallState?) {
         state = newState
@@ -153,7 +147,6 @@ class BoardView {
     private let _pos: Vector
     private let _boxSize: Vector
     private var _nextBalls: [Ball] = []
-    private var _distance: DistanceGrid
     private var _selected: Cell? = nil
 
     init(pos: Vector, boxSize: Vector) {
@@ -161,7 +154,6 @@ class BoardView {
         _grid = Grid<Box>(size: boardSize, filling: Box())
         _pos = pos
         _boxSize = boxSize
-        _distance = DistanceGrid(size: boardSize)
     }
 
     func render(to canvas: Canvas, time: Seconds) {
@@ -177,19 +169,10 @@ class BoardView {
             if let anim = box.traceAnim {
                 let f = anim.pos(time)
                 if f > 0 {
-                    if box.traceState == .fading {
-                        let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos)
-                        let alpha = (1 - f)
-                        canvas.setColor(Color.fromFloat(0.4, 0.4, 0.8, alpha))
-                        canvas.drawRect(dest: rect)
-                    }
-                    else if box.traceState == .highlighted {
-                        let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos)
-                        var alpha = (1 - f)
-                        alpha = alpha <= 0.5 ? alpha : 1 - alpha
-                        canvas.setColor(Color.fromFloat(0.0, 0.5, 0.0, alpha * 0.5))
-                        canvas.drawRect(dest: rect)
-                    }
+                    let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos)
+                    let alpha = (1 - f)
+                    canvas.setColor(Color.fromFloat(0.4, 0.4, 0.8, alpha))
+                    canvas.drawRect(dest: rect)
                 }
             }
 
@@ -247,19 +230,10 @@ class BoardView {
 
         _selected = cell
         _grid[cell].setState(.selected, time, next: nil)
-        _distance.calculate(start: cell, isObstacle: { _grid[$0].state != .empty })
-
-        for (cell, distance) in _distance.grid.enumerated() {
-            if distance > 0 {
-                _grid[cell].traceState = .highlighted
-                _grid[cell].traceAnim = Anim(start: time + Double(_distance.max - distance) * 0.03, duration: 1.0)
-            }
-        }
     }
 
     func deselect() {
         _selected = nil
-        _distance.clear()
     }
 
     func apply(_ message: Message, time: Seconds) {
@@ -269,13 +243,11 @@ class BoardView {
                 _grid[cell].type = type
                 _grid[cell].setState(.spawning, time, next: .normal)
             }
-        case let Message.moved(from: src, to: dest):
+        case let Message.moved(from: src, to: dest, path: path):
             _grid[dest] = _grid[src]
             _grid[dest].setState(.normal, time, next: nil)
             _grid[src].setState(.empty, time, next: nil)
-            let path = _distance.path(to: dest)
             for (i, cell) in path.enumerated() {
-                _grid[cell].traceState = .fading
                 _grid[cell].traceAnim = Anim(start: time + Double(i) * 0.02, duration: 0.5)
             }
             deselect()

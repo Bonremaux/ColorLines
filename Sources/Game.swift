@@ -6,7 +6,7 @@ enum Action {
 
 enum Message {
     case cleared([[Cell]])
-    case moved(from: Cell, to: Cell)
+    case moved(from: Cell, to: Cell, path: [Cell])
     case spawned([Ball])
     case next([Ball])
     case scored(Int)
@@ -47,7 +47,7 @@ class Game {
             cleared = _board.clearAllLines()
         }
 
-        var msg: [Message] = [.moved(from: src, to: dest)]
+        var msg: [Message] = [.moved(from: src, to: dest, path: path)]
         if !spawned.isEmpty { msg += [.spawned(spawned), .next(_board.nextBalls)] }
         if !cleared.isEmpty { msg += [.cleared(cleared)] }
 
