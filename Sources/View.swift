@@ -15,6 +15,11 @@ struct Anim {
     }
 }
 
+func interpolate(from start: Float, to end: Float, _ f: Float) -> Float {
+    let diff = end - start
+    return start + diff * f
+}
+
 enum BallState {
     case empty
     case normal
@@ -170,8 +175,8 @@ class BoardView {
                 let f = anim.progress(time)
                 if f > 0 {
                     let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos)
-                    let alpha = (1 - f)
-                    canvas.setColor(Color.fromFloat(0.4, 0.4, 0.8, alpha))
+                    let alpha = interpolate(from: 255, to: 0, f)
+                    canvas.setColor(Color(50, 50, 150, UInt8(alpha)))
                     canvas.drawRect(dest: rect)
                 }
             }
@@ -180,16 +185,18 @@ class BoardView {
             case .empty:
                 break
             case .spawning:
-                let f = box.anim.progress(time) * 0.7 + 0.3
+                let f = box.anim.progress(time)
+                let scale = interpolate(from: 0.3, to: 1.0, f)
                 let bounds = cell.bounds(cellSize: _boxSize)
-                let rect = bounds.scaled(by: f).centered(on: bounds)
+                let rect = bounds.scaled(by: scale).centered(on: bounds)
                 canvas.drawTexture(name: box.type.spriteName, dest: rect.shifted(by: _pos))
             case .normal:
                 canvas.drawTexture(name: box.type.spriteName, dest: cell.bounds(cellSize: _boxSize).shifted(by: _pos))
             case .clearing:
-                let f = 1.0 - box.anim.progress(time)
+                let f = box.anim.progress(time)
+                let scale = interpolate(from: 1, to: 0, f)
                 let bounds = cell.bounds(cellSize: _boxSize)
-                let rect = bounds.scaled(by: Vector(f, 1)).centered(on: bounds)
+                let rect = bounds.scaled(by: Vector(scale, 1)).centered(on: bounds)
                 canvas.drawTexture(name: box.type.spriteName, dest: rect.shifted(by: _pos))
             case .selected:
                 let f = box.anim.progress(time)
