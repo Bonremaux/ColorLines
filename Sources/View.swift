@@ -9,7 +9,7 @@ struct Anim {
         self.duration = duration
     }
 
-    func pos(_ now: Seconds) -> Float {
+    func progress(_ now: Seconds) -> Float {
         let diff = now - start
         return min(Float(diff / duration), 1.0)
     }
@@ -47,7 +47,7 @@ struct Box {
     }
 
     mutating func update(time: Seconds) {
-        if anim.pos(time) >= 1.0 {
+        if anim.progress(time) >= 1.0 {
             if let next = nextState {
                 state = next
                 nextState = nil
@@ -59,7 +59,7 @@ struct Box {
         }
 
         if let anim = traceAnim {
-            if anim.pos(time) >= 1.0 {
+            if anim.progress(time) >= 1.0 {
                 traceAnim = nil
             }
         }
@@ -167,7 +167,7 @@ class BoardView {
             let box = _grid[cell]
 
             if let anim = box.traceAnim {
-                let f = anim.pos(time)
+                let f = anim.progress(time)
                 if f > 0 {
                     let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos)
                     let alpha = (1 - f)
@@ -180,19 +180,19 @@ class BoardView {
             case .empty:
                 break
             case .spawning:
-                let f = box.anim.pos(time) * 0.7 + 0.3
+                let f = box.anim.progress(time) * 0.7 + 0.3
                 let bounds = cell.bounds(cellSize: _boxSize)
                 let rect = bounds.scaled(by: f).centered(on: bounds)
                 canvas.drawTexture(name: box.type.spriteName, dest: rect.shifted(by: _pos))
             case .normal:
                 canvas.drawTexture(name: box.type.spriteName, dest: cell.bounds(cellSize: _boxSize).shifted(by: _pos))
             case .clearing:
-                let f = 1.0 - box.anim.pos(time)
+                let f = 1.0 - box.anim.progress(time)
                 let bounds = cell.bounds(cellSize: _boxSize)
                 let rect = bounds.scaled(by: Vector(f, 1)).centered(on: bounds)
                 canvas.drawTexture(name: box.type.spriteName, dest: rect.shifted(by: _pos))
             case .selected:
-                let f = box.anim.pos(time)
+                let f = box.anim.progress(time)
                 let offset = (Float(sin(Double(f * 2 * Float.pi))) + 1) / 2 * 10
                 let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos - Vector(0, offset))
                 canvas.drawTexture(name: box.type.spriteName, dest: rect)
