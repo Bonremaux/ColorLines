@@ -10,6 +10,10 @@ struct DistanceGrid {
         return offsets.map { $0 + cell }.filter(_distance.isValidCell)
     }
 
+    mutating func clear() {
+        _distance.fill(with: -1)
+    }
+
     mutating func calculate(start: Cell, isObstacle: @noescape (Cell) -> Bool) {
         _distance.fill(with: -1)
 
@@ -52,5 +56,13 @@ struct DistanceGrid {
 
     func hasPath(to dest: Cell) -> Bool {
         return _distance[dest] >= 0
+    }
+
+    var grid: Grid<Int> {
+        return _distance
+    }
+
+    var max: Int {
+        return _distance.values().max() ?? 0
     }
 }

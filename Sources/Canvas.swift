@@ -39,6 +39,7 @@ enum Event {
     case quit
     case button(state: ButtonState, type: ButtonType, pos: Vector)
     case key(state: KeyState, code: KeyCode)
+    case motion(pos: Vector)
 }
 
 protocol Input {
@@ -234,6 +235,10 @@ class SDLInput: Input {
                     let state = eventType == SDL_MOUSEBUTTONDOWN ? ButtonState.pressed : ButtonState.released
                     return Event.button(state: state, type: type, pos: Vector(Float(event.button.x), Float(event.button.y)))
                 }
+            }
+
+            if eventType == SDL_MOUSEMOTION {
+                return Event.motion(pos: Vector(Float(event.button.x), Float(event.button.y)))
             }
         }
 

@@ -11,7 +11,7 @@ struct Anim {
 
     func pos(_ now: Seconds) -> Float {
         let diff = now - start
-        return Float(diff / duration)
+        return min(Float(diff / duration), 1.0)
     }
 }
 
@@ -33,12 +33,18 @@ enum BallState {
     }
 }
 
+enum TraceState {
+    case highlighted
+    case fading
+}
+
 struct Box {
     var type: BallType = .blue
     var state: BallState = .empty
     var nextState: BallState? = nil
     var anim: Anim = Anim(start: 0, duration: 0)
     var traceAnim: Anim? = nil
+    var traceState: TraceState = .highlighted
 
     mutating func setState(_ newState: BallState, _ time: Seconds, next: BallState?) {
         state = newState
@@ -47,7 +53,7 @@ struct Box {
     }
 
     mutating func update(time: Seconds) {
-        if anim.pos(time) > 1.0 {
+        if anim.pos(time) >= 1.0 {
             if let next = nextState {
                 state = next
                 nextState = nil
@@ -59,14 +65,14 @@ struct Box {
         }
 
         if let anim = traceAnim {
-            if anim.pos(time) > 1.0 {
+            if anim.pos(time) >= 1.0 {
                 traceAnim = nil
             }
         }
     }
 
     var isEmpty: Bool {
-        return state != .normal && state != .spawning
+        return state != .normal && state != .spawning && state != .selected // TODO remove me
     }
 }
 
@@ -146,13 +152,16 @@ class BoardView {
     private var _grid: Grid<Box>
     private let _pos: Vector
     private let _boxSize: Vector
-    private var _selected: Cell? = nil
     private var _nextBalls: [Ball] = []
+    private var _distance: DistanceGrid
+    private var _selected: Cell? = nil
 
     init(pos: Vector, boxSize: Vector) {
-        _grid = Grid<Box>(size: Cell(9, 9), filling: Box())
+        let boardSize = Cell(9, 9) // TODO remove me
+        _grid = Grid<Box>(size: boardSize, filling: Box())
         _pos = pos
         _boxSize = boxSize
+        _distance = DistanceGrid(size: boardSize)
     }
 
     func render(to canvas: Canvas, time: Seconds) {
@@ -164,6 +173,26 @@ class BoardView {
         for (cell, _) in _grid.enumerated() {
             _grid[cell].update(time: time)
             let box = _grid[cell]
+
+            if let anim = box.traceAnim {
+                let f = anim.pos(time)
+                if f > 0 {
+                    if box.traceState == .fading {
+                        let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos)
+                        let alpha = (1 - f)
+                        canvas.setColor(Color.fromFloat(0.4, 0.4, 0.8, alpha))
+                        canvas.drawRect(dest: rect)
+                    }
+                    else if box.traceState == .highlighted {
+                        let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos)
+                        var alpha = (1 - f)
+                        alpha = alpha <= 0.5 ? alpha : 1 - alpha
+                        canvas.setColor(Color.fromFloat(0.0, 0.5, 0.0, alpha * 0.5))
+                        canvas.drawRect(dest: rect)
+                    }
+                }
+            }
+
             switch box.state {
             case .empty:
                 break
@@ -185,16 +214,6 @@ class BoardView {
                 let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos - Vector(0, offset))
                 canvas.drawTexture(name: box.type.spriteName, dest: rect)
             }
-            if let anim = box.traceAnim {
-                let f = anim.pos(time)
-                if f > 0 {
-                    let rect = cell.bounds(cellSize: _boxSize).shifted(by: _pos)
-                    var alpha = (1 - f)
-                    alpha = alpha > 0.5 ? 0.5 : alpha
-                    canvas.setColor(Color.fromFloat(0.4, 0.4, 0.8, alpha))
-                    canvas.drawRect(dest: rect)
-                }
-            }
         }
     }
 
@@ -202,8 +221,8 @@ class BoardView {
         switch event {
         case Event.initialize:
             return Action.start
-        case let Event.button(.pressed, .left, _pos):
-            let cell = windowToView(_pos).toCell(cellSize: _boxSize)
+        case let Event.button(.pressed, .left, pos):
+            let cell = windowToView(pos).toCell(cellSize: _boxSize)
             guard _grid.isValidCell(cell) else {
                 return nil
             }
@@ -221,14 +240,26 @@ class BoardView {
         return nil
     }
 
-    func select(_ cell: Cell?, _ time: Seconds) {
-        if let old = _selected {
-            _grid[old].setState(.normal, time, next: nil)
+    func select(_ cell: Cell, _ time: Seconds) {
+        if let selected = _selected {
+            _grid[selected].setState(.normal, time, next: nil)
         }
-        if let new = cell {
-            _selected = new
-            _grid[new].setState(.selected, time, next: nil)
+
+        _selected = cell
+        _grid[cell].setState(.selected, time, next: nil)
+        _distance.calculate(start: cell, isObstacle: { _grid[$0].state != .empty })
+
+        for (cell, distance) in _distance.grid.enumerated() {
+            if distance > 0 {
+                _grid[cell].traceState = .highlighted
+                _grid[cell].traceAnim = Anim(start: time + Double(_distance.max - distance) * 0.03, duration: 1.0)
+            }
         }
+    }
+
+    func deselect() {
+        _selected = nil
+        _distance.clear()
     }
 
     func apply(_ message: Message, time: Seconds) {
@@ -238,14 +269,16 @@ class BoardView {
                 _grid[cell].type = type
                 _grid[cell].setState(.spawning, time, next: .normal)
             }
-        case let Message.moved(from: src, to: dest, path: path):
+        case let Message.moved(from: src, to: dest):
             _grid[dest] = _grid[src]
             _grid[dest].setState(.normal, time, next: nil)
             _grid[src].setState(.empty, time, next: nil)
-            _selected = nil
+            let path = _distance.path(to: dest)
             for (i, cell) in path.enumerated() {
+                _grid[cell].traceState = .fading
                 _grid[cell].traceAnim = Anim(start: time + Double(i) * 0.02, duration: 0.5)
             }
+            deselect()
         case let Message.cleared(lines):
             for line in lines {
                 for cell in line {
