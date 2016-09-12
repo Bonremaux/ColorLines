@@ -3,6 +3,6 @@ import PackageDescription
 let package = Package(
     name: "ColorLines",
     dependencies: [
-        .Package(url: "../CSDL2", majorVersion: 1)
+        .Package(url: "https://github.com/Bonremaux/CSDL2.git", majorVersion: 1)
     ]
 )
