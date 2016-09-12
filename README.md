@@ -2,6 +2,9 @@
 
 This is ColorLines clone written in Swift
 
+## Demo
+
+[![ColorLines video demonstration](https://img.youtube.com/vi/86_0oFB7A_o/0.jpg)](https://www.youtube.com/watch?v=86_0oFB7A_o)
 
 ## Building and Running (Linux)
 
